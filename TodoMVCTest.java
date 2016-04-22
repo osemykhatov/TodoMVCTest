@@ -24,6 +24,7 @@ public class TodoMVCTest {
         edit("1", "1 edited canceled").pressEscape();
         assertTasks("1");
         toggleAll();
+        assertTasks("1");
 
         filterActive();
         assertInvisibleTasks();
