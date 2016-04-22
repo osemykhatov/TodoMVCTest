@@ -6,37 +6,40 @@ import org.openqa.selenium.By;
 
 import static com.codeborne.selenide.CollectionCondition.empty;
 import static com.codeborne.selenide.CollectionCondition.exactTexts;
-import static com.codeborne.selenide.Condition.cssClass;
-import static com.codeborne.selenide.Condition.exactText;
-import static com.codeborne.selenide.Condition.text;
+import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.*;
 
 
 public class TodoMVCTest {
 
     private ElementsCollection tasks = $$("#todo-list>li");
-    
+
+
     @Test
     public void testTasksLifeCycle() {
 
         open("https://todomvc4tasj.herokuapp.com/");
 
         add("1");
-        edit("1", "1ed").pressEscape();
-        toggleAll();
+        edit("1", "1 edited canceled").pressEscape();
         assertTasks("1");
+        toggleAll();
 
         filterActive();
+        assertInvisibleTasks();
 
         add("2");
-        edit("2", "2ed").pressEnter();
-        toggle("2ed");
+        edit("2", "2 edited").pressEnter();
+        toggle("2 edited");
+        assertInvisibleTasks();
 
         filterCompleted();
 
-        assertTasks("1", "2ed");
+        assertTasks("1", "2 edited");
         toggle("1");
+        assertTasks("2 edited");
         clearCompleted();
+        assertInvisibleTasks();
 
         filterAll();
 
@@ -52,10 +55,9 @@ public class TodoMVCTest {
         }
     }
 
-
-    private SelenideElement edit(String currentText, String newText) {
-        tasks.find(exactText(currentText)).doubleClick();
-        return tasks.find(cssClass("editing")).$(".edit").setValue(newText);
+    private SelenideElement edit(String oldTaskText, String newTasjText) {
+        tasks.find(exactText(oldTaskText)).doubleClick();
+        return tasks.find(cssClass("editing")).$(".edit").setValue(newTasjText);
     }
 
     private void delete(String taskText) {
@@ -76,7 +78,11 @@ public class TodoMVCTest {
     }
 
     private void assertTasks(String... taskTexts) {
-        tasks.shouldHave(exactTexts(taskTexts));
+        tasks.filter(visible).shouldHave(exactTexts(taskTexts));
+    }
+
+    private void assertInvisibleTasks() {
+        tasks.filter(visible).shouldBe(empty);
     }
 
     private void filterActive() {
@@ -91,7 +97,7 @@ public class TodoMVCTest {
         $(By.linkText("All")).click();
     }
 
-     private void assertNoTasks() {
+    private void assertNoTasks() {
         tasks.shouldBe(empty);
     }
 
