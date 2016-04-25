@@ -23,28 +23,31 @@ public class TodoMVCTest {
         add("1");
         edit("1", "1 edited canceled").pressEscape();
         assertTasks("1");
+        // Complete all
         toggleAll();
         assertTasks("1");
 
         filterActive();
-        assertInvisibleTasks();
+        assertNoVisibleTasks();
 
         add("2");
         edit("2", "2 edited").pressEnter();
+        // Complete
         toggle("2 edited");
-        assertInvisibleTasks();
+        assertNoVisibleTasks();
 
         filterCompleted();
-
-        assertTasks("1", "2 edited");
+        assertVisibleTasks("1", "2 edited");
+        // Reopen
         toggle("1");
-        assertTasks("2 edited");
+        assertVisibleTasks("2 edited");
+
         clearCompleted();
-        assertInvisibleTasks();
+        assertNoVisibleTasks();
 
         filterAll();
+        assertVisibleTasks("1");
 
-        assertTasks("1");
         delete("1");
         assertNoTasks();
 
@@ -79,11 +82,19 @@ public class TodoMVCTest {
     }
 
     private void assertTasks(String... taskTexts) {
+        tasks.shouldHave(exactTexts(taskTexts));
+    }
+
+    private void assertVisibleTasks(String... taskTexts) {
         tasks.filter(visible).shouldHave(exactTexts(taskTexts));
     }
 
-    private void assertInvisibleTasks() {
+    private void assertNoVisibleTasks() {
         tasks.filter(visible).shouldBe(empty);
+    }
+
+    private void assertNoTasks() {
+        tasks.shouldBe(empty);
     }
 
     private void filterActive() {
@@ -97,10 +108,5 @@ public class TodoMVCTest {
     private void filterAll() {
         $(By.linkText("All")).click();
     }
-
-    private void assertNoTasks() {
-        tasks.shouldBe(empty);
-    }
-
 
 }
