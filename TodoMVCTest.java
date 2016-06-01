@@ -1,6 +1,9 @@
 
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openqa.selenium.By;
 
@@ -14,13 +17,24 @@ public class TodoMVCTest {
 
     private ElementsCollection tasks = $$("#todo-list>li");
 
+    @Before
+    public void openPage() {
+        open("https://todomvc4tasj.herokuapp.com/");
+        add("1");
+
+    }
+
+    @After
+    public void clearData() {
+        executeJavaScript("localStorage.clear()");
+
+    }
+
+    /* FUNCTIONAL TESTS */
 
     @Test
     public void testTasksLifeCycle() {
 
-        open("https://todomvc4tasj.herokuapp.com/");
-
-        add("1");
         edit("1", "1 edited canceled").pressEscape();
         assertTasks("1");
         // Complete all
@@ -52,6 +66,159 @@ public class TodoMVCTest {
         assertNoTasks();
 
     }
+
+    /* FUNCTIONAL TESTS */
+
+    // Actions at ALL filter
+    @Test
+    public void testCompleteAllFiletr() {
+        toggle("1");
+        assertVisibleTasks("1");
+        itemsLeft("0");
+
+    }
+
+    @Test
+    public void testCompleteAllAllFilter() {
+        toggleAll();
+        assertVisibleTasks("1");
+        itemsLeft("0");
+
+    }
+
+    @Test
+    public void testReOpenAllFilter() {
+        toggle("1");
+        toggle("1");
+        assertTasks("1");
+        itemsLeft("1");
+
+    }
+
+    @Test
+    public void testReOpenAllAllFilter() {
+        toggle("1");
+        toggleAll();
+        assertTasks("1");
+        itemsLeft("1");
+
+    }
+
+    //Actions at ACTIVE filter
+
+    @Test
+    public void testDeleteActiveFilter() {
+        filterActive();
+        add("2");
+        delete("1");
+        assertTasks("2");
+        itemsLeft("1");
+    }
+
+    @Test
+    public void testCompleteAllActiveFilter() {
+        filterActive();
+        toggleAll();
+        assertNoVisibleTasks();
+        itemsLeft("0");
+    }
+
+    @Test
+    public void testClearCompletedActiveFilter() {
+        filterActive();
+        toggle("1");
+        clearCompleted();
+        assertNoTasks();
+
+    }
+
+    @Test
+    public void testReOpenAllActiveFilter() {
+        filterActive();
+        toggle("1");
+        toggleAll();
+        assertTasks("1");
+    }
+
+    // Actions at COMPLETED filter
+
+    @Test
+    public void testAddCompletedFilter() {
+        filterCompleted();
+        add("2");
+        assertNoVisibleTasks();
+        itemsLeft("2");
+    }
+
+    @Test
+    public void testEditCompletedFilter() {
+        toggle("1");
+        filterCompleted();
+        edit("1", "1 edited").pressEnter();
+        assertTasks("1 edited");
+        itemsLeft("0");
+
+    }
+
+    @Test
+    public void testDeleteCompletedFilter() {
+        toggle("1");
+        filterCompleted();
+        delete("1");
+        assertNoTasks();
+
+    }
+
+    @Test
+    public void testReOpenAllCompletedFilter() {
+        toggle("1");
+        filterCompleted();
+        toggleAll();
+        assertNoVisibleTasks();
+    }
+
+    /* SWITCH BETWEEN FILTER */
+
+    @Test
+    public void testSwitchFilter() {
+        filterCompleted();
+        assertNoVisibleTasks();
+        filterActive();
+        assertTasks("1");
+        filterAll();
+        assertTasks("1");
+    }
+
+    /* ADDITIONAL EDIT OPERATIONS*/
+
+    @Test
+    public void testUndoEditEsc() {
+        filterActive();
+        edit("1", "1 edited").pressEscape();
+        assertTasks("1");
+
+    }
+
+    @Test
+    public void testApplyTaskTab() {
+        edit("1", "1 edited").pressTab();
+        assertTasks("1 edited");
+    }
+
+    @Test
+    public void testDeleteEmptyText() {
+        edit("1", "").pressEnter();
+        assertNoTasks();
+
+    }
+
+    @Test
+    public void testApplyTaskClickOut() {
+        edit("1", "1 edited");
+        $("#header").click();
+        assertTasks("1 edited");
+    }
+
 
     private void add(String... taskTexts) {
         for (String text : taskTexts) {
@@ -107,6 +274,10 @@ public class TodoMVCTest {
 
     private void filterAll() {
         $(By.linkText("All")).click();
+    }
+
+    private void itemsLeft(String countNumber) {
+        $("#todo-count>strong").shouldHave(exactText(countNumber));
     }
 
 }
