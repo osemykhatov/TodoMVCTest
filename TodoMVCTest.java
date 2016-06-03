@@ -20,7 +20,6 @@ public class TodoMVCTest {
     @Before
     public void openPage() {
         open("https://todomvc4tasj.herokuapp.com/");
-        add("1");
 
     }
 
@@ -30,12 +29,11 @@ public class TodoMVCTest {
 
     }
 
-    /* FUNCTIONAL TESTS */
 
     @Test
     public void testTasksLifeCycle() {
 
-        edit("1", "1 edited canceled").pressEscape();
+        add("1");
         assertTasks("1");
         // Complete all
         toggleAll();
@@ -45,16 +43,15 @@ public class TodoMVCTest {
         assertNoVisibleTasks();
 
         add("2");
-        edit("2", "2 edited").pressEnter();
         // Complete
-        toggle("2 edited");
+        toggle("2");
         assertNoVisibleTasks();
 
         filterCompleted();
-        assertVisibleTasks("1", "2 edited");
+        assertVisibleTasks("1", "2");
         // Reopen
         toggle("1");
-        assertVisibleTasks("2 edited");
+        assertVisibleTasks("2");
 
         clearCompleted();
         assertNoVisibleTasks();
@@ -67,158 +64,28 @@ public class TodoMVCTest {
 
     }
 
-    /* FUNCTIONAL TESTS */
 
-    // Actions at ALL filter
     @Test
-    public void testCompleteAllFiletr() {
-        toggle("1");
-        assertVisibleTasks("1");
-        itemsLeft("0");
+    public void testUndoEditAtAllFilter() {
+        // Give - tasks add
+        add("1", "2");
+
+        edit("2", "2 edited").pressEscape();
+        assertVisibleTasks("1", "2");
+        assertItemsLeft("2");
 
     }
 
     @Test
-    public void testCompleteAllAllFilter() {
-        toggleAll();
-        assertVisibleTasks("1");
-        itemsLeft("0");
-
-    }
-
-    @Test
-    public void testReOpenAllFilter() {
-        toggle("1");
-        toggle("1");
-        assertTasks("1");
-        itemsLeft("1");
-
-    }
-
-    @Test
-    public void testReOpenAllAllFilter() {
-        toggle("1");
-        toggleAll();
-        assertTasks("1");
-        itemsLeft("1");
-
-    }
-
-    //Actions at ACTIVE filter
-
-    @Test
-    public void testDeleteActiveFilter() {
+    public void testEditAtActiveFilter() {
+        // Give - tasks add -> go to filter
+        add("1", "2");
         filterActive();
-        add("2");
-        delete("1");
-        assertTasks("2");
-        itemsLeft("1");
-    }
 
-    @Test
-    public void testCompleteAllActiveFilter() {
-        filterActive();
-        toggleAll();
-        assertNoVisibleTasks();
-        itemsLeft("0");
-    }
-
-    @Test
-    public void testClearCompletedActiveFilter() {
-        filterActive();
-        toggle("1");
-        clearCompleted();
-        assertNoTasks();
-
-    }
-
-    @Test
-    public void testReOpenAllActiveFilter() {
-        filterActive();
-        toggle("1");
-        toggleAll();
-        assertTasks("1");
-    }
-
-    // Actions at COMPLETED filter
-
-    @Test
-    public void testAddCompletedFilter() {
-        filterCompleted();
-        add("2");
-        assertNoVisibleTasks();
-        itemsLeft("2");
-    }
-
-    @Test
-    public void testEditCompletedFilter() {
-        toggle("1");
-        filterCompleted();
         edit("1", "1 edited").pressEnter();
-        assertTasks("1 edited");
-        itemsLeft("0");
-
+        assertVisibleTasks("1 edited", "2");
+        assertItemsLeft("2");
     }
-
-    @Test
-    public void testDeleteCompletedFilter() {
-        toggle("1");
-        filterCompleted();
-        delete("1");
-        assertNoTasks();
-
-    }
-
-    @Test
-    public void testReOpenAllCompletedFilter() {
-        toggle("1");
-        filterCompleted();
-        toggleAll();
-        assertNoVisibleTasks();
-    }
-
-    /* SWITCH BETWEEN FILTER */
-
-    @Test
-    public void testSwitchFilter() {
-        filterCompleted();
-        assertNoVisibleTasks();
-        filterActive();
-        assertTasks("1");
-        filterAll();
-        assertTasks("1");
-    }
-
-    /* ADDITIONAL EDIT OPERATIONS*/
-
-    @Test
-    public void testUndoEditEsc() {
-        filterActive();
-        edit("1", "1 edited").pressEscape();
-        assertTasks("1");
-
-    }
-
-    @Test
-    public void testApplyTaskTab() {
-        edit("1", "1 edited").pressTab();
-        assertTasks("1 edited");
-    }
-
-    @Test
-    public void testDeleteEmptyText() {
-        edit("1", "").pressEnter();
-        assertNoTasks();
-
-    }
-
-    @Test
-    public void testApplyTaskClickOut() {
-        edit("1", "1 edited");
-        $("#header").click();
-        assertTasks("1 edited");
-    }
-
 
     private void add(String... taskTexts) {
         for (String text : taskTexts) {
@@ -226,9 +93,9 @@ public class TodoMVCTest {
         }
     }
 
-    private SelenideElement edit(String oldTaskText, String newTasjText) {
+    private SelenideElement edit(String oldTaskText, String newTasText) {
         tasks.find(exactText(oldTaskText)).doubleClick();
-        return tasks.find(cssClass("editing")).$(".edit").setValue(newTasjText);
+        return tasks.find(cssClass("editing")).$(".edit").setValue(newTasText);
     }
 
     private void delete(String taskText) {
@@ -276,7 +143,7 @@ public class TodoMVCTest {
         $(By.linkText("All")).click();
     }
 
-    private void itemsLeft(String countNumber) {
+    private void assertItemsLeft(String countNumber) {
         $("#todo-count>strong").shouldHave(exactText(countNumber));
     }
 
