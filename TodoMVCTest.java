@@ -67,7 +67,7 @@ public class TodoMVCTest {
 
     @Test
     public void testUndoEditAtAllFilter() {
-        // Give - tasks add
+        // Given - tasks add
         add("1", "2");
 
         edit("2", "2 edited").pressEscape();
@@ -78,7 +78,7 @@ public class TodoMVCTest {
 
     @Test
     public void testEditAtActiveFilter() {
-        // Give - tasks add -> go to filter
+        // Given - tasks add -> go to filter
         add("1", "2");
         filterActive();
 
